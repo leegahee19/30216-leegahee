@@ -1,0 +1,91 @@
+from collections import Counter
+
+# 질병 데이터베이스 (열성 유전 예시)
+disease_info = {
+    "색맹": "열성",
+    "낭포성 섬유증": "열성",
+    "페닐케톤뇨증": "열성",
+    "낫모양 적혈구 빈혈증": "열성",
+    "선천성 청각장애": "열성",
+    "알비노증(백색증)": "열성"
+}
+
+def estimate_genotype(has_disease, family_history):
+    if has_disease.lower() == "예":
+        return "aa"
+    elif family_history.lower() == "예":
+        return "Aa"
+    else:
+        return "AA"
+
+def get_child_genotypes(parent1, parent2):
+    alleles1 = list(parent1)
+    alleles2 = list(parent2)
+    children = []
+    for a in alleles1:
+        for b in alleles2:
+            if (a == 'A' and b == 'a') or (a == 'a' and b == 'A'):
+                child = 'Aa'
+            else:
+                child = a + b
+            children.append(child)
+    return children
+
+def calculate_probabilities(children, inheritance_type):
+    total = len(children)
+    count = {'AA': 0, 'Aa': 0, 'aa': 0}
+    for child in children:
+        if child in count:
+            count[child] += 1
+    result = {"정상": 0, "보인자": 0, "질병": 0}
+    if inheritance_type == "열성":
+        result["정상"] = round(count['AA'] / total * 100, 2)
+        result["보인자"] = round(count['Aa'] / total * 100, 2)
+        result["질병"] = round(count['aa'] / total * 100, 2)
+    else:
+        result["정상"] = round(count['AA'] / total * 100, 2)
+        result["보인자"] = round(count['Aa'] / total * 100, 2)
+        result["질병"] = round(count['aa'] / total * 100, 2)
+    return result
+
+def main():
+    print("💡 질병명을 입력하세요. 아래 질병들 중에서 선택할 수 있습니다:")
+    for disease in disease_info:
+        print(f"- {disease}")
+    disease = input("\n질병명 입력: ").strip()
+
+    if disease not in disease_info:
+        print(f"\n[{disease}]은(는) 데이터베이스에 없습니다.")
+        return
+
+    inheritance_type = disease_info[disease]
+
+    print("\n🧬 부모의 유전자형을 추정합니다. 아래 질문에 예/아니오로 답해주세요.\n")
+
+    print("[엄마 유전자형 추정]")
+    mom_disease = input(f"엄마가 {disease}를 가지고 있나요? (예/아니오): ")
+    mom_history = input(f"엄마의 가족 중 {disease}를 가진 사람이 있나요? (예/아니오): ")
+    mom_genotype = estimate_genotype(mom_disease, mom_history)
+
+    print("\n[아빠 유전자형 추정]")
+    dad_disease = input(f"아빠가 {disease}를 가지고 있나요? (예/아니오): ")
+    dad_history = input(f"아빠의 가족 중 {disease}를 가진 사람이 있나요? (예/아니오): ")
+    dad_genotype = estimate_genotype(dad_disease, dad_history)
+
+    print(f"\n▶ 추정된 엄마 유전자형: {mom_genotype}")
+    print(f"▶ 추정된 아빠 유전자형: {dad_genotype}")
+
+    children = get_child_genotypes(mom_genotype, dad_genotype)
+    result = calculate_probabilities(children, inheritance_type)
+
+    print(f"\n[{disease}]에 대한 자녀의 유전형 확률:")
+    for key, value in result.items():
+        print(f"{key}: {value}%")
+
+    if result["질병"] == 0:
+        print("\n✅ 이 조합에서는 자녀가 질병을 가질 확률이 없습니다.")
+    elif result["질병"] > 0:
+        print("\n⚠️ 자녀가 질병을 가질 확률이 존재합니다.")
+
+if __name__ == "__main__":
+    main()
